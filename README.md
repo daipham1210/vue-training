@@ -1,4 +1,4 @@
-# test-element-ui
+# Vue training
 
 ## Project setup
 ```
