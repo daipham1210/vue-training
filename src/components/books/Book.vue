@@ -1,79 +1,189 @@
 <template>
-  <div class="listBook">
-    <div
-      v-for="item in listBooks" 
-      :key="item.id"
-      class="bookItem"
-    >
-      <div class="orderNumber">
-        #1
-      </div>
-      <img
-        src="https://via.placeholder.com/100"
-        alt="placeholder"
-      >
-      <div class="bookInfo">
-        <h3>{{ }}</h3>
-        <div class="author">
-          ¡Domina y comprende Git de una vez por todas!
-        </div>
-        <p class="description">
-          Lorem Ipsum is simply dummy text of the printing and typesetting
-          industry. Lorem Ipsum has been the industry's standard dummy text ever
-          since the 1500s, when an unknown printer took a galley of type and
-          scrambled it to make a type specimen book.
-        </p>
+  <div>
+    <div class="header">
+      <create-book-button 
+        @add-book="createBook"
+      />
+      <div class="searchBook">
+        <el-button type="primary" icon="el-icon-search">Search</el-button>
+        <input type="text" v-model="searchBook"/>
       </div>
     </div>
-
-    <button />
+    <div class="listBook">
+      <div class="bookItem" v-for="item in listBooks" :key="item.id">
+        <div class="orderNumber">#1</div>
+        <img  class="imgBook" src="https://via.placeholder.com/100" alt="placeholder" />
+        <div v-if="!statusOpenEdit[item.id]" class="bookInfo">
+          <h3>{{ item.title }}</h3>
+          <div class="author">{{ item.author }}</div>
+          <p class="description">
+            {{ item.decription }}
+          </p>
+        </div>
+        <div class="deleteBook">
+          <el-button @click="editBook(item)">
+            <span v-if="statusOpenEdit">
+              Edit
+            </span>
+          </el-button>
+          <el-button @click="deleteBook(item.id)">
+            X
+          </el-button>
+        </div>
+        <book-form
+          v-if="statusOpenEdit[item.id]"
+          :book-data="updateBook[item.id]"
+          @save-book="submitUpdateBook"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { defineComponent, onMounted, reactive, toRefs } from "vue";
-import BookService from '../../services/BookService'
+import BookService from "@services/BookService";
+import BookForm from "@components/books/BookForm.vue";
+// import useEmitter from "@/composables/useEmitter";
+import CreateBookButton from "@components/books/CreateBookButton.vue";
 
 export default defineComponent({
   name: "Book",
+  components: {
+    "book-form": BookForm,
+    "create-book-button": CreateBookButton,
+  },
   setup() {
-    const data = reactive ({
-     listBooks: []
-    })
+    // const bus = useEmitter();
+    const data = reactive({
+      listBooks: [],
+      statusOpenEdit: {},
+      updateBook: {},
+      searchBook: "",
+    });
+
+    
 
     onMounted(() => {
-      getListBook()
-    })
+      getListBook();
+    });
+
+    const createBook = (bookData) => {
+      console.log('bokkkkkkkk', bookData)
+      data.listBooks.push(bookData);
+    };
 
     const getListBook = () => {
       BookService.getBooks()
         .then(function(response) {
           // handle success
-          console.log(response);
-          data.listBooks = response.data
+          console.log('getListBook', response)
+            data.listBooks = response.data;
+            data.searchBook = data.listBooks.filter((item) => item.title.includes())
+            console.log('data.listBooks', data.searchBook)
         })
         .catch(function(error) {
           // handle error
           console.log(error);
-        })
+        });
     };
+
+    const deleteBook = (id) => {
+      BookService.deleteBook(id)
+        .then(function(response) {
+          // handle success
+          console.log(response);
+          data.listBooks = data.listBooks.filter((item) => item.id !== id);
+        })
+        .catch(function(error) {
+          // handle error
+          console.log(error);
+        });
+    };
+
+    const editBook = (item) => {
+      data.statusOpenEdit[item.id] = !data.statusOpenEdit[item.id]; // true -> show form edit
+      data.updateBook[item.id] = Object.assign({}, item); // copy data cua item sang update book
+      console.log(data.updateBook);
+    };
+
+    const submitUpdateBook = (bookData) => {
+      /* eslint-disable no-debugger */
+      // data = ?
+      // data = { a: 1, b: 2, c: 2 } phải năm đc data có cấu trúc như thế nào 
+      BookService.updateBook(bookData.id, bookData)
+        .then(function(response) {
+          // handle success
+          console.log(response);
+          // Tìm item book trong list book cần update
+          // gan data cho item book do
+          const updateItemBook = data.listBooks.find((item) => item.id === bookData.id);
+          console.log('aaa', updateItemBook)
+          if (updateItemBook && response.status === 200) {
+            updateItemBook.title = bookData.title
+            updateItemBook.author = bookData.author
+            updateItemBook.decription = bookData.decription
+          }
+          data.statusOpenEdit[bookData.id] = false
+        })
+        .catch(function(error) {
+          // handle error
+          console.log(error);
+        });
+    };
+
+    // onMounted(() => {
+    //   bus.on("add-book", createBook);
+    // });
+
+   
 
     return {
       ...toRefs(data),
       getListBook,
-    }
+      deleteBook,
+      editBook,
+      submitUpdateBook,
+      createBook,
+    };
   },
 });
 </script>
 
 <style lang="scss">
+.header{
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 30px;
+}
 .listBook {
   .bookItem {
     display: flex;
+    padding-bottom: 20px;
+    position: relative;
+    .imgBook {
+      width: 100px;
+      height: 100px;
+    }
     .orderNumber {
-      align-self: center;
       margin-right: 10px;
+      margin-top: 10px;
       font-weight: 600;
+    }
+    .deleteBook {
+      position: absolute;
+      right: 0;
+      color: white;
+      padding: 5px;
+      button {
+        margin-left: 10px;
+        padding: 10px;
+        background-color: blue;
+      }
+      
+    }
+    .editBook {
+      margin-right: 10px;
     }
     .bookInfo {
       padding-left: 20px;

@@ -9,7 +9,7 @@ import Book from '@components/books/Book.vue'
 import NotFound from '@components/layouts/NotFound.vue'
 import root from '@components/provide-example/root.vue'
 import Main from '@components/event-bus-example/main.vue'
-
+import CreateBook from '@components/books/CreateBook.vue'
 const routes = [
   {
     path: '/',
@@ -44,8 +44,13 @@ const routes = [
   },
   {
     path: '/books',
-    name: 'Book',
+    name: 'books',
     component: Book,
+  },
+  {
+    path: '/books/create',
+    name: 'CreateBook',
+    component: CreateBook,
   },
   {
     path: '/:catchAll(.*)', // truong hop ko tim thay url thi se nhay vao component nay

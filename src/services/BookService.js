@@ -10,8 +10,11 @@ export default {
   createBook(data) {
     return http.post('/books/', data)
   },
-  updateBook(data) {
-    return http.put('/books/', data)
-  }
+  updateBook(id, data) {
+    return http.put(`/books/${id}`, data)
+  },
+  deleteBook(id) {
+    return http.delete(`/books/${id}`)
+  },
   // createBook
 }
