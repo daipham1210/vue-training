@@ -6,11 +6,11 @@
       />
       <div class="searchBook">
         <el-button type="primary" icon="el-icon-search">Search</el-button>
-        <input type="text" v-model="searchBook"/>
+        <input class="headerButton" type="text" v-model="searchBook"/>
       </div>
     </div>
     <div class="listBook">
-      <div class="bookItem" v-for="item in listBooks" :key="item.id">
+      <div class="bookItem" v-for="item in listBooksShow" :key="item.id">
         <div class="orderNumber">#1</div>
         <img  class="imgBook" src="https://via.placeholder.com/100" alt="placeholder" />
         <div v-if="!statusOpenEdit[item.id]" class="bookInfo">
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, reactive, toRefs } from "vue";
+import { defineComponent, onMounted, reactive, toRefs, watch } from "vue";
 import BookService from "@services/BookService";
 import BookForm from "@components/books/BookForm.vue";
 // import useEmitter from "@/composables/useEmitter";
@@ -60,6 +60,7 @@ export default defineComponent({
       statusOpenEdit: {},
       updateBook: {},
       searchBook: "",
+      listBooksShow: [],
     });
 
     
@@ -79,14 +80,36 @@ export default defineComponent({
           // handle success
           console.log('getListBook', response)
             data.listBooks = response.data;
-            data.searchBook = data.listBooks.filter((item) => item.title.includes())
+            // data.searchBook = data.listBooks.filter((item) => item.title.includes(item))
             console.log('data.listBooks', data.searchBook)
+      //       /* eslint-disable no-debugger */
+      // debugger
         })
         .catch(function(error) {
           // handle error
           console.log(error);
         });
     };
+
+     watch(
+      () => data.listBooks, 
+      (newValue) => {
+        data.listBooksShow = newValue
+      }
+    )
+
+    watch(
+      () => data.searchBook, 
+      (newValue) => {
+        // nếu có keyword thì mình sẽ locj
+        if(newValue) {
+          data.listBooksShow = data.listBooksShow.filter((item) => item.title.includes(newValue))
+        } else { // neu keyword rong thi sao
+          data.listBooksShow = data.listBooks
+        }
+      }
+    )
+
 
     const deleteBook = (id) => {
       BookService.deleteBook(id)
@@ -155,6 +178,12 @@ export default defineComponent({
   display: flex;
   justify-content: space-between;
   padding-bottom: 30px;
+  .headerButton {
+    height: 35px;
+    font-size: 15px;
+    margin-left: 5px;
+    border-radius: 10px;
+  }
 }
 .listBook {
   .bookItem {
