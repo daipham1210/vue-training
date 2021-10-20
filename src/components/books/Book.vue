@@ -101,10 +101,9 @@ export default defineComponent({
     watch(
       () => data.searchBook, 
       (newValue) => {
-        // nếu có keyword thì mình sẽ locj
         if(newValue) {
           data.listBooksShow = data.listBooksShow.filter((item) => item.title.includes(newValue))
-        } else { // neu keyword rong thi sao
+        } else {
           data.listBooksShow = data.listBooks
         }
       }
