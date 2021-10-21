@@ -34,7 +34,7 @@ import {
   toRefs, 
   getCurrentInstance,
   watch,
-} from "vue";
+} from "vue"
 
 export default defineComponent({
   name: 'BookFormModal',
