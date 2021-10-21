@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="header">
-      <create-book-button 
-        @add-book="createBook"
-      />
+      <el-button @click="showCreateModal">
+        Create Book
+      </el-button>
       <div class="searchBook">
         <el-button type="primary" icon="el-icon-search">Search</el-button>
         <input class="headerButton" type="text" v-model="searchBook"/>
@@ -21,7 +21,7 @@
           </p>
         </div>
         <div class="deleteBook">
-          <el-button @click="editBook(item)">
+          <el-button @click="showEditModal(item)">
             <span v-if="statusOpenEdit">
               Edit
             </span>
@@ -30,28 +30,29 @@
             X
           </el-button>
         </div>
-        <book-form
-          v-if="statusOpenEdit[item.id]"
-          :book-data="updateBook[item.id]"
-          @save-book="submitUpdateBook"
-        />
       </div>
     </div>
+    <book-form-modal
+      v-model="isShowModal"
+      :form-type="formModalType"
+      :book-prop="bookEditData"
+      @closed="showModal(false)"
+      @submit-create-book="submitCreateBook"
+      @submit-update-book="submitUpdateBook"
+    />
   </div>
 </template>
 
 <script>
 import { defineComponent, onMounted, reactive, toRefs, watch } from "vue";
 import BookService from "@services/BookService";
-import BookForm from "@components/books/BookForm.vue";
+import BookFormModal from "@components/books/BookFormModal.vue";
 // import useEmitter from "@/composables/useEmitter";
-import CreateBookButton from "@components/books/CreateBookButton.vue";
 
 export default defineComponent({
   name: "Book",
   components: {
-    "book-form": BookForm,
-    "create-book-button": CreateBookButton,
+    "book-form-modal": BookFormModal,
   },
   setup() {
     // const bus = useEmitter();
@@ -61,18 +62,14 @@ export default defineComponent({
       updateBook: {},
       searchBook: "",
       listBooksShow: [],
+      isShowModal: false,
+      formModalType: 'create',
+      bookEditData: {},
     });
-
     
-
     onMounted(() => {
       getListBook();
     });
-
-    const createBook = (bookData) => {
-      console.log('bokkkkkkkk', bookData)
-      data.listBooks.push(bookData);
-    };
 
     const getListBook = () => {
       BookService.getBooks()
@@ -82,7 +79,7 @@ export default defineComponent({
             data.listBooks = response.data;
             // data.searchBook = data.listBooks.filter((item) => item.title.includes(item))
             console.log('data.listBooks', data.searchBook)
-      //       /* eslint-disable no-debugger */
+      // /* eslint-disable no-debugger */
       // debugger
         })
         .catch(function(error) {
@@ -91,7 +88,21 @@ export default defineComponent({
         });
     };
 
-     watch(
+    const submitCreateBook = async (bookData) => {
+      try {
+        const response = await BookService.createBook(bookData)
+        if (response.status === 201) {
+          bookData.id = response.data.id
+          data.listBooks.push(bookData)
+        }
+      } catch(err) {
+        console.log(err)
+      } finally {
+        showModal(false)
+      }
+    }
+
+    watch(
       () => data.listBooks, 
       (newValue) => {
         data.listBooksShow = newValue
@@ -113,60 +124,53 @@ export default defineComponent({
     const deleteBook = (id) => {
       BookService.deleteBook(id)
         .then(function(response) {
-          // handle success
-          console.log(response);
           data.listBooks = data.listBooks.filter((item) => item.id !== id);
         })
         .catch(function(error) {
-          // handle error
           console.log(error);
         });
     };
 
-    const editBook = (item) => {
-      data.statusOpenEdit[item.id] = !data.statusOpenEdit[item.id]; // true -> show form edit
-      data.updateBook[item.id] = Object.assign({}, item); // copy data cua item sang update book
-      console.log(data.updateBook);
+    const showCreateModal = () => {
+      data.bookEditData = {}
+      data.formModalType = 'create'
+      showModal(true)
+    }
+
+    const showEditModal = (item) => {
+      data.bookEditData = Object.assign({}, item)
+      data.formModalType = 'update'
+      showModal(true)
+    }
+
+    const submitUpdateBook = async (bookData) => {
+      try {
+        const response = await BookService.updateBook(bookData.id, bookData)
+        if (response.status === 200) {
+          const updateBook = data.listBooks.find((item) => item.id === bookData.id)
+          Object.assign(updateBook, bookData)
+        }
+      } catch(err) {
+        console.log(err)
+      } finally {
+        showModal(false)
+      }
     };
-
-    const submitUpdateBook = (bookData) => {
-      /* eslint-disable no-debugger */
-      // data = ?
-      // data = { a: 1, b: 2, c: 2 } phải năm đc data có cấu trúc như thế nào 
-      BookService.updateBook(bookData.id, bookData)
-        .then(function(response) {
-          // handle success
-          console.log(response);
-          // Tìm item book trong list book cần update
-          // gan data cho item book do
-          const updateItemBook = data.listBooks.find((item) => item.id === bookData.id);
-          console.log('aaa', updateItemBook)
-          if (updateItemBook && response.status === 200) {
-            updateItemBook.title = bookData.title
-            updateItemBook.author = bookData.author
-            updateItemBook.decription = bookData.decription
-          }
-          data.statusOpenEdit[bookData.id] = false
-        })
-        .catch(function(error) {
-          // handle error
-          console.log(error);
-        });
-    };
-
-    // onMounted(() => {
-    //   bus.on("add-book", createBook);
-    // });
-
+    
+    const showModal = (isShowModal) => {
+      data.isShowModal = isShowModal
+    }
    
 
     return {
       ...toRefs(data),
       getListBook,
       deleteBook,
-      editBook,
       submitUpdateBook,
-      createBook,
+      showModal,
+      showEditModal,
+      submitCreateBook,
+      showCreateModal,
     };
   },
 });
