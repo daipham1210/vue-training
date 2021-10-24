@@ -85,7 +85,6 @@ export default defineComponent({
     const submitCreateBook = async (bookData) => {
       try {
         const response = await BookService.createBook(bookData)
-        console.log('sssssss',bookData)
         if (response.status === 201) {
           bookData.id = response.data.id
           data.listBooks.push(bookData)
