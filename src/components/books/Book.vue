@@ -71,22 +71,16 @@ export default defineComponent({
       getListBook();
     });
 
-    const getListBook = () => {
-      BookService.getBooks()
-        .then(function(response) {
-          // handle success
-          console.log('getListBook', response)
-            data.listBooks = response.data;
-            // data.searchBook = data.listBooks.filter((item) => item.title.includes(item))
-            console.log('data.listBooks', data.searchBook)
-      // /* eslint-disable no-debugger */
-      // debugger
-        })
-        .catch(function(error) {
-          // handle error
-          console.log(error);
-        });
-    };
+    const getListBook = async () => {
+       try {
+        const response = await BookService.getBooks()
+        if (response.status === 200) {
+          data.listBooks = response.data
+        }
+      } catch(err) {
+        console.log(err)
+      } 
+    }
 
     const submitCreateBook = async (bookData) => {
       try {
@@ -121,14 +115,15 @@ export default defineComponent({
     )
 
 
-    const deleteBook = (id) => {
-      BookService.deleteBook(id)
-        .then(function(response) {
-          data.listBooks = data.listBooks.filter((item) => item.id !== id);
-        })
-        .catch(function(error) {
-          console.log(error);
-        });
+    const deleteBook = async (id) => {
+     try {
+        const response = await BookService.deleteBook(id)
+        if (response.status === 200) {
+           data.listBooks = data.listBooks.filter((item) => item.id !== id);
+        }
+      } catch(err) {
+        console.log(err)
+      } 
     };
 
     const showCreateModal = () => {
@@ -160,7 +155,6 @@ export default defineComponent({
     const showModal = (isShowModal) => {
       data.isShowModal = isShowModal
     }
-   
 
     return {
       ...toRefs(data),
