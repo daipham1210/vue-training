@@ -1,79 +1,221 @@
 <template>
-  <div class="listBook">
-    <div
-      v-for="item in listBooks" 
-      :key="item.id"
-      class="bookItem"
-    >
-      <div class="orderNumber">
-        #1
-      </div>
-      <img
-        src="https://via.placeholder.com/100"
-        alt="placeholder"
-      >
-      <div class="bookInfo">
-        <h3>{{ }}</h3>
-        <div class="author">
-          ¡Domina y comprende Git de una vez por todas!
-        </div>
-        <p class="description">
-          Lorem Ipsum is simply dummy text of the printing and typesetting
-          industry. Lorem Ipsum has been the industry's standard dummy text ever
-          since the 1500s, when an unknown printer took a galley of type and
-          scrambled it to make a type specimen book.
-        </p>
+  <div>
+    <div class="header">
+      <el-button @click="showCreateModal">
+        Create Book
+      </el-button>
+      <div class="searchBook">
+        <el-button type="primary" icon="el-icon-search">Search</el-button>
+        <input class="headerButton" type="text" v-model="searchBook"/>
       </div>
     </div>
-
-    <button />
+    <div class="listBook">
+      <div class="bookItem" v-for="item in listBooksShow" :key="item.id">
+        <div class="orderNumber">#1</div>
+        <img  class="imgBook" src="https://via.placeholder.com/100" alt="placeholder" />
+        <div v-if="!statusOpenEdit[item.id]" class="bookInfo">
+          <h3>{{ item.title }}</h3>
+          <div class="author">{{ item.author }}</div>
+          <p class="description">
+            {{ item.decription }}
+          </p>
+        </div>
+        <div class="deleteBook">
+          <el-button @click="showEditModal(item)">
+            <span v-if="statusOpenEdit">
+              Edit
+            </span>
+          </el-button>
+          <el-button @click="deleteBook(item.id)">
+            X
+          </el-button>
+        </div>
+      </div>
+    </div>
+    <book-form-modal
+      v-model="isShowModal"
+      :form-type="formModalType"
+      :book-prop="bookEditData"
+      @closed="showModal(false)"
+      @submit-create-book="submitCreateBook"
+      @submit-update-book="submitUpdateBook"
+    />
   </div>
 </template>
 
 <script>
-import { defineComponent, onMounted, reactive, toRefs } from "vue";
-import BookService from '../../services/BookService'
+import { defineComponent, onMounted, reactive, toRefs, watch } from "vue";
+import BookService from "@services/BookService";
+import BookFormModal from "@components/books/BookFormModal.vue";
+// import useEmitter from "@/composables/useEmitter";
 
 export default defineComponent({
   name: "Book",
+  components: {
+    "book-form-modal": BookFormModal,
+  },
   setup() {
-    const data = reactive ({
-     listBooks: []
-    })
-
+    // const bus = useEmitter();
+    const data = reactive({
+      listBooks: [],
+      statusOpenEdit: {},
+      updateBook: {},
+      searchBook: "",
+      listBooksShow: [],
+      isShowModal: false,
+      formModalType: 'create',
+      bookEditData: {},
+    });
+    
     onMounted(() => {
-      getListBook()
-    })
+      getListBook();
+    });
 
     const getListBook = () => {
       BookService.getBooks()
         .then(function(response) {
           // handle success
-          console.log(response);
-          data.listBooks = response.data
+          console.log('getListBook', response)
+            data.listBooks = response.data;
+            // data.searchBook = data.listBooks.filter((item) => item.title.includes(item))
+            console.log('data.listBooks', data.searchBook)
+      // /* eslint-disable no-debugger */
+      // debugger
         })
         .catch(function(error) {
           // handle error
           console.log(error);
-        })
+        });
     };
+
+    const submitCreateBook = async (bookData) => {
+      try {
+        const response = await BookService.createBook(bookData)
+        if (response.status === 201) {
+          bookData.id = response.data.id
+          data.listBooks.push(bookData)
+        }
+      } catch(err) {
+        console.log(err)
+      } finally {
+        showModal(false)
+      }
+    }
+
+    watch(
+      () => data.listBooks, 
+      (newValue) => {
+        data.listBooksShow = newValue
+      }
+    )
+
+    watch(
+      () => data.searchBook, 
+      (newValue) => {
+        if(newValue) {
+          data.listBooksShow = data.listBooksShow.filter((item) => item.title.includes(newValue))
+        } else {
+          data.listBooksShow = data.listBooks
+        }
+      }
+    )
+
+
+    const deleteBook = (id) => {
+      BookService.deleteBook(id)
+        .then(function(response) {
+          data.listBooks = data.listBooks.filter((item) => item.id !== id);
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    };
+
+    const showCreateModal = () => {
+      data.bookEditData = {}
+      data.formModalType = 'create'
+      showModal(true)
+    }
+
+    const showEditModal = (item) => {
+      data.bookEditData = Object.assign({}, item)
+      data.formModalType = 'update'
+      showModal(true)
+    }
+
+    const submitUpdateBook = async (bookData) => {
+      try {
+        const response = await BookService.updateBook(bookData.id, bookData)
+        if (response.status === 200) {
+          const updateBook = data.listBooks.find((item) => item.id === bookData.id)
+          Object.assign(updateBook, bookData)
+        }
+      } catch(err) {
+        console.log(err)
+      } finally {
+        showModal(false)
+      }
+    };
+    
+    const showModal = (isShowModal) => {
+      data.isShowModal = isShowModal
+    }
+   
 
     return {
       ...toRefs(data),
       getListBook,
-    }
+      deleteBook,
+      submitUpdateBook,
+      showModal,
+      showEditModal,
+      submitCreateBook,
+      showCreateModal,
+    };
   },
 });
 </script>
 
 <style lang="scss">
+.header{
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 30px;
+  .headerButton {
+    height: 35px;
+    font-size: 15px;
+    margin-left: 5px;
+    border-radius: 10px;
+  }
+}
 .listBook {
   .bookItem {
     display: flex;
+    padding-bottom: 20px;
+    position: relative;
+    .imgBook {
+      width: 100px;
+      height: 100px;
+    }
     .orderNumber {
-      align-self: center;
       margin-right: 10px;
+      margin-top: 10px;
       font-weight: 600;
+    }
+    .deleteBook {
+      position: absolute;
+      right: 0;
+      color: white;
+      padding: 5px;
+      button {
+        margin-left: 10px;
+        padding: 10px;
+        background-color: blue;
+      }
+      
+    }
+    .editBook {
+      margin-right: 10px;
     }
     .bookInfo {
       padding-left: 20px;
