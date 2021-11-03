@@ -25,13 +25,13 @@
             {{ error.$message }}
           </div>
         </div>
-        <!-- <div class="formItem">
-          <label>Price: </label>
-          <input v-model="v$.bookData.price.$model" type="number" />
-          <div class="error" v-for="(error, index) in v$.bookData.price.$errors" :key="index">
+        <div class="formItem">
+          <label>Email: </label>
+          <input v-model="v$.bookData.email.$model" type="text" />
+          <div class="error" v-for="(error, index) in v$.bookData.email.$errors" :key="index">
             {{ error.$message }}
           </div>
-        </div> -->
+        </div>
       </form>
     </div>
     <template #footer>
@@ -48,11 +48,10 @@ import {
   defineComponent, 
   reactive, 
   toRefs, 
-  getCurrentInstance,
   watch,
 } from "vue"
 import useVuelidate from '@vuelidate/core'
-import { required, helpers } from '@vuelidate/validators'
+import { required, helpers, minLength, maxLength } from '@vuelidate/validators'
 
 export default defineComponent({
   name: 'BookFormModal',
@@ -67,7 +66,6 @@ export default defineComponent({
     },
   },
   setup(props, { emit }) {
-    const vm = getCurrentInstance().proxy
     
     const data = reactive({
       show: false,
@@ -76,11 +74,12 @@ export default defineComponent({
         author: '',
         decription: '',
         price: 0,
+        email: '',
       },
     })
 
     const rules = {
-      bookData: { // truogn hop cac bien model nam trong object thi them key object o day
+      bookData: { // truong hop cac bien model nam trong object thi them key object o day
         title: {
           required: helpers.withMessage('Title cannot be empty', required),
         },
@@ -89,6 +88,12 @@ export default defineComponent({
         },
         decription: {
           required: helpers.withMessage('Decription cannot be empty', required),
+        },
+        email: {
+          required,
+          // email: helpers.withMessage('Email cannot be empty', email),
+          minLength: helpers.withMessage('minLength > 5', minLength(5)),
+          maxLength: helpers.withMessage('maxLength < 10', maxLength(10))
         },
         // price: {
         //   required: helpers.withMessage('Price cannot be empty', required),
@@ -105,31 +110,26 @@ export default defineComponent({
     // v$ giong nhu instance vm, chua data
 
     const onSubmit = () => {
+      console.log(' v$',  v$)
+      //  /* eslint-disable no-debugger */
+      // debugger
       v$.value.$touch() // touch all field of form
       if (v$.value.$invalid) return
-
-      if (props.formType === 'create') {
-        emit('submit-create-book', data.bookData)
-        data.bookData = {}
-      } else {
-        emit('submit-update-book', data.bookData)
-      }
+        if (props.formType === 'create') {
+          emit('submit-create-book', data.bookData)
+        } else {
+          emit('submit-update-book', data.bookData)
+        }
     }
-
-    watch(
-      () => props.value,
-      (val) => vm.$nextTick(() => (data.show = val)),
-      { immediate: true }
-    )
 
     watch(
       () => props.bookProp,
       (newVal) => {
+        v$.value.$reset()
         data.bookData = Object.assign({}, newVal)
       },
       { deep: true }
     )
-
 
     return {
       ...toRefs(data),
