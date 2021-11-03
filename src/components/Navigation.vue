@@ -26,6 +26,11 @@
           Book
         </router-link>
       </li>
+      <li>
+        <router-link to="/list-book">
+          List-book
+        </router-link>
+      </li>
     </ul>
   </nav>  
 </template>
