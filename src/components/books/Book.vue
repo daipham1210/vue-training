@@ -103,8 +103,6 @@ export default defineComponent({
 
     const getListBook = async () => {
       try {
-        if (data.paginator._page !== 1) {
-        }
         const params = {
           ...data.paginator,
         };
