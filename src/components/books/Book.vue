@@ -6,13 +6,21 @@
       </el-button>
       <div class="searchBook">
         <el-button type="primary" icon="el-icon-search">Search</el-button>
-        <input class="headerButton" type="text" v-model="searchBook"/>
+        <input class="headerButton" type="text" v-model="searchBook" />
       </div>
     </div>
     <div class="listBook">
-      <div class="bookItem" v-for="item in listBooksShow" :key="item.id">
-        <div class="orderNumber">#1</div>
-        <img  class="imgBook" src="https://via.placeholder.com/100" alt="placeholder" />
+      <div
+        class="bookItem"
+        v-for="(item, $index) in listBooksShow"
+        :key="$index"
+      >
+        <div class="orderNumber">{{ $index }}</div>
+        <img
+          class="imgBook"
+          src="https://via.placeholder.com/100"
+          alt="placeholder"
+        />
         <div v-if="!statusOpenEdit[item.id]" class="bookInfo">
           <h3>{{ item.title }}</h3>
           <div class="author">{{ item.author }}</div>
@@ -31,6 +39,18 @@
           </el-button>
         </div>
       </div>
+      <VueEternalLoading :load="loadMoreBook">
+        <template #loading>
+          <div class="my-loading">
+            Trying to load content...
+          </div>
+        </template>
+        <!-- <template #no-more>
+          <div class="my-no-more">
+            There is no more content.
+          </div>
+        </template> -->
+      </VueEternalLoading>
     </div>
     <book-form-modal
       v-model="isShowModal"
@@ -44,15 +64,19 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, reactive, toRefs, watch } from "vue";
+import { defineComponent, reactive, toRefs, watch } from "vue";
 import BookService from "@services/BookService";
 import BookFormModal from "@components/books/BookFormModal.vue";
+import debounce from "lodash/debounce";
+import { VueEternalLoading } from "@ts-pro/vue-eternal-loading";
+
 // import useEmitter from "@/composables/useEmitter";
 
 export default defineComponent({
   name: "Book",
   components: {
     "book-form-modal": BookFormModal,
+    VueEternalLoading,
   },
   setup() {
     // const bus = useEmitter();
@@ -63,98 +87,115 @@ export default defineComponent({
       searchBook: "",
       listBooksShow: [],
       isShowModal: false,
-      formModalType: 'create',
+      formModalType: "create",
       bookEditData: {},
-    });
-    
-    onMounted(() => {
-      getListBook();
+      paginator: {
+        _page: 0,
+        _limit: 10,
+      },
     });
 
+    const loadMoreBook = async ({ loaded }) => {
+      data.paginator._page += 1;
+      await getListBook();
+      loaded(data.listBooks.length, data.paginator._limit);
+    };
+
     const getListBook = async () => {
-       try {
-        const response = await BookService.getBooks()
+      try {
+        const params = {
+          ...data.paginator,
+        };
+
+        const response = await BookService.getBooks(params);
         if (response.status === 200) {
-          data.listBooks = response.data
+          if (!data.listBooks.length) {
+            data.listBooks = response.data;
+          } else {
+            data.listBooks = data.listBooks.concat(response.data);
+          }
         }
-      } catch(err) {
-        console.log(err)
-      } 
-    }
+      } catch (err) {
+        console.log(err);
+      }
+    };
 
     const submitCreateBook = async (bookData) => {
       try {
-        const response = await BookService.createBook(bookData)
+        const response = await BookService.createBook(bookData);
         if (response.status === 201) {
-          bookData.id = response.data.id
-          data.listBooks.push(bookData)
+          bookData.id = response.data.id;
+          data.listBooks.push(bookData);
         }
-      } catch(err) {
-        console.log(err)
+      } catch (err) {
+        console.log(err);
       } finally {
-        showModal(false)
+        showModal(false);
       }
-    }
+    };
 
     watch(
-      () => data.listBooks, 
+      () => data.listBooks,
       (newValue) => {
-        data.listBooksShow = newValue
+        data.listBooksShow = newValue;
       }
-    )
+    );
 
     watch(
-      () => data.searchBook, 
-      (newValue) => {
-        if(newValue) {
-          data.listBooksShow = data.listBooksShow.filter((item) => item.title.includes(newValue))
+      () => data.searchBook,
+      debounce((newValue) => {
+        if (newValue) {
+          data.listBooksShow = data.listBooksShow.filter((item) =>
+            item.title.includes(newValue)
+          );
         } else {
-          data.listBooksShow = data.listBooks
+          data.listBooksShow = data.listBooks;
         }
-      }
-    )
-
+      }, 2000)
+    );
 
     const deleteBook = async (id) => {
-     try {
-        const response = await BookService.deleteBook(id)
+      try {
+        const response = await BookService.deleteBook(id);
         if (response.status === 200) {
-           data.listBooks = data.listBooks.filter((item) => item.id !== id);
+          data.listBooks = data.listBooks.filter((item) => item.id !== id);
         }
-      } catch(err) {
-        console.log(err)
-      } 
+      } catch (err) {
+        console.log(err);
+      }
     };
 
     const showCreateModal = () => {
-      data.bookEditData = {}
-      data.formModalType = 'create'
-      showModal(true)
-    }
+      data.bookEditData = {};
+      data.formModalType = "create";
+      showModal(true);
+    };
 
     const showEditModal = (item) => {
-      data.bookEditData = Object.assign({}, item)
-      data.formModalType = 'update'
-      showModal(true)
-    }
+      data.bookEditData = Object.assign({}, item);
+      data.formModalType = "update";
+      showModal(true);
+    };
 
     const submitUpdateBook = async (bookData) => {
       try {
-        const response = await BookService.updateBook(bookData.id, bookData)
+        const response = await BookService.updateBook(bookData.id, bookData);
         if (response.status === 200) {
-          const updateBook = data.listBooks.find((item) => item.id === bookData.id)
-          Object.assign(updateBook, bookData)
+          const updateBook = data.listBooks.find(
+            (item) => item.id === bookData.id
+          );
+          Object.assign(updateBook, bookData);
         }
-      } catch(err) {
-        console.log(err)
+      } catch (err) {
+        console.log(err);
       } finally {
-        showModal(false)
+        showModal(false);
       }
     };
-    
+
     const showModal = (isShowModal) => {
-      data.isShowModal = isShowModal
-    }
+      data.isShowModal = isShowModal;
+    };
 
     return {
       ...toRefs(data),
@@ -165,13 +206,14 @@ export default defineComponent({
       showEditModal,
       submitCreateBook,
       showCreateModal,
+      loadMoreBook,
     };
   },
 });
 </script>
 
 <style lang="scss">
-.header{
+.header {
   display: flex;
   justify-content: space-between;
   padding-bottom: 30px;
@@ -206,7 +248,6 @@ export default defineComponent({
         padding: 10px;
         background-color: blue;
       }
-      
     }
     .editBook {
       margin-right: 10px;
