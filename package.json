@@ -16,6 +16,7 @@
     "element-plus": "^1.0.2-beta.28",
     "lodash": "^4.17.21",
     "mitt": "^3.0.0",
+    "v-pagination-3": "^0.1.7",
     "vue": "^3.0.0",
     "vue-router": "^4.0.11"
   },

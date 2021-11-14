@@ -10,7 +10,7 @@ import NotFound from '@components/layouts/NotFound.vue'
 import root from '@components/provide-example/root.vue'
 import Main from '@components/event-bus-example/main.vue'
 import CreateBook from '@components/books/CreateBook.vue'
-import ListBook from '@components/book-paginate/list-book.vue'
+import BookPagination from '@components/books/BookPagination.vue'
 const routes = [
   {
     path: '/',
@@ -49,11 +49,6 @@ const routes = [
     component: Book,
   },
   {
-    path: '/list-book',
-    name: 'list-book',
-    component: ListBook,
-  },
-  {
     path: '/books/create',
     name: 'CreateBook',
     component: CreateBook,
@@ -71,6 +66,11 @@ const routes = [
     path: '/event-bus',
     name: 'event-bus',
     component: Main,
+  },
+  {
+    path: '/book-panigition',
+    name: 'list-book-panigition',
+    component: BookPagination,
   },
 ]
 

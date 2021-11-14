@@ -27,7 +27,7 @@
         </router-link>
       </li>
       <li>
-        <router-link to="/list-book">
+        <router-link to="/book-panigition">
           List-book
         </router-link>
       </li>
