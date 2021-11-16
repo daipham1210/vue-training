@@ -16,7 +16,7 @@ export default defineComponent({
       value: 0,
     })
 
-    const addOne = () => vm.$store.commit('increment') // goi den ham mutation
+    const addOne = () => vm.$store.dispatch('increment') // goi den ham mutation
 
     const addValue = () => {
       vm.$store.commit('increase', {

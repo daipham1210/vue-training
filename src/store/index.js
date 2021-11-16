@@ -7,6 +7,9 @@ export default createStore({
     };
   },
   mutations: { // chua cac function de update state, muon update state phai goi thong qua mutation
+    // ko chua async code (goi API, setTimeout, promise...)
+    // pure function (voi 1 dau vao xac dinh thi se tra ve ket qua xac dinh)
+    // dieu nay giup ta du doan dc thay doi cua state
     increment(state) {
       state.counter = state.counter + 1;
     },
@@ -14,17 +17,17 @@ export default createStore({
       state.counter = state.counter + payload.value;
     }
   },
-  // actions: {
-  //   increment(context) {
-  //     setTimeout(function() {
-  //       context.commit('increment');
-  //     }, 2000);
-  //   },
-  //   increase(context, payload) {
-  //     console.log(context);
-  //     context.commit('increase', payload);
-  //   }
-  // },
+  actions: { // chua async code
+    // o trong component chi dc goi action
+    increment({ commit }) {
+      setTimeout(function() {
+        commit('increment')
+      }, 2000)
+    },
+    increase({ commit }, payload) {
+      commit('increase', payload)
+    }
+  },
   getters: { // ham get cac gia tri dua tren state
     finalCounter(state) {
       return state.counter * 3;
