@@ -1,6 +1,7 @@
 <template>
   <div>
     <div class="header">
+      <div>Counter: {{ $store.state.counter }}</div>
       <el-button @click="showCreateModal">
         Create Book
       </el-button>

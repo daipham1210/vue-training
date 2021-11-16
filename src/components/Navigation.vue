@@ -31,6 +31,11 @@
           List-book
         </router-link>
       </li>
+      <li>
+        <router-link to="/vuex-example">
+          Vuex example
+        </router-link>
+      </li>
     </ul>
   </nav>  
 </template>
