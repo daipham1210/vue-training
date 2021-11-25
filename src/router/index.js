@@ -11,6 +11,7 @@ import root from '@components/provide-example/root.vue'
 import Main from '@components/event-bus-example/main.vue'
 import CreateBook from '@components/books/CreateBook.vue'
 import BaseContainer from '@components/counter/BaseContainer.vue'
+import Auth from '@components/Auth/Auth.vue'
 
 const routes = [
   {
@@ -72,6 +73,11 @@ const routes = [
     path: '/vuex-example',
     name: 'vuex-example',
     component: BaseContainer,
+  },
+  {
+    path: '/auth',
+    name: 'auth',
+    component: Auth,
   },
 ]
 

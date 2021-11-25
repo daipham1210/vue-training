@@ -36,6 +36,11 @@
           Vuex example
         </router-link>
       </li>
+      <li>
+        <router-link to="/auth">
+          Auth
+        </router-link>
+      </li>
     </ul>
   </nav>  
 </template>

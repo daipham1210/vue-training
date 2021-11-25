@@ -1,7 +1,7 @@
 <template>
   <section>
     <h2>VueX </h2>
-    <p>Counter: {{ $store.state.counter }}</p>
+    <p>Counter: {{ $store.state.numbers.counter }}</p>
     <p>Final Counter: {{ finalCounter }}</p>
     <change-counter></change-counter>
   </section>
@@ -18,7 +18,9 @@ export default defineComponent({
   },
   setup() {
     const vm = getCurrentInstance().proxy
-    const finalCounter = computed(() => vm.$store.getters.finalCounter)
+    //  /* eslint-disable no-debugger */
+    // debugger
+    const finalCounter = computed(() => vm.$store.getters['numbers/finalCounter'])
 
     return {
       finalCounter,

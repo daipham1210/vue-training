@@ -1,7 +1,8 @@
 <template>
-  <button @click="addOne">Add 1</button>
-  <button @click="addValue">Add value</button>
+  <el-button @click="addOne">Add 1</el-button>
+  <el-button @click="addValue">Add value</el-button>
   <el-input v-model="value" class="input" placeholder="Please input" />
+  <el-button @click="resetValue">Reset value</el-button>
 </template>
 
 <script>
@@ -16,18 +17,22 @@ export default defineComponent({
       value: 0,
     })
 
-    const addOne = () => vm.$store.dispatch('increment') // goi den ham mutation
-
+    const addOne = () => vm.$store.dispatch('numbers/increment') // goi den ham mutation
     const addValue = () => {
-      vm.$store.commit('increase', {
+      vm.$store.dispatch('numbers/increase', {
         value: +data.value,
       })
+    }
+
+    const resetValue = () => {
+      vm.$store.dispatch('numbers/resetCounter')
     }
 
     return {
       ...toRefs(data),
       addOne,
       addValue,
+      resetValue,
     }
   }
 })
