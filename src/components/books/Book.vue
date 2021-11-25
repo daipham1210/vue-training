@@ -1,6 +1,7 @@
 <template>
   <div>
     <div class="header">
+      <div>Counter: {{ $store.state.counter }}</div>
       <el-button @click="showCreateModal">
         Create Book
       </el-button>
@@ -64,7 +65,7 @@
 </template>
 
 <script>
-import { defineComponent, reactive, toRefs, watch } from "vue";
+import { computed, defineComponent, reactive, toRefs, watch, getCurrentInstance } from "vue";
 import BookService from "@services/BookService";
 import BookFormModal from "@components/books/BookFormModal.vue";
 import debounce from "lodash/debounce";
@@ -79,9 +80,10 @@ export default defineComponent({
     VueEternalLoading,
   },
   setup() {
+    const vm = getCurrentInstance().proxy
     // const bus = useEmitter();
     const data = reactive({
-      listBooks: [],
+      listBooks: computed(() => vm.$store.getters['books/listBooks']),
       statusOpenEdit: {},
       updateBook: {},
       searchBook: "",
@@ -97,28 +99,12 @@ export default defineComponent({
 
     const loadMoreBook = async ({ loaded }) => {
       data.paginator._page += 1;
-      await getListBook();
+      //  /* eslint-disable no-debugger */
+      // debugger
+      await vm.$store.dispatch('books/getListBooks', data.paginator)
       loaded(data.listBooks.length, data.paginator._limit);
     };
 
-    const getListBook = async () => {
-      try {
-        const params = {
-          ...data.paginator,
-        };
-
-        const response = await BookService.getBooks(params);
-        if (response.status === 200) {
-          if (!data.listBooks.length) {
-            data.listBooks = response.data;
-          } else {
-            data.listBooks = data.listBooks.concat(response.data);
-          }
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    };
 
     const submitCreateBook = async (bookData) => {
       try {
@@ -199,7 +185,6 @@ export default defineComponent({
 
     return {
       ...toRefs(data),
-      getListBook,
       deleteBook,
       submitUpdateBook,
       showModal,
